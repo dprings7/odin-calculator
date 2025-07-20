@@ -23,9 +23,10 @@
     height: 150px;
     background-color: rgba(37, 35, 35, 0.801);
     font-size: 40px;
+    padding: 8px;
 }
 
-.button-container {
+.btn-container {
     display: flex;
     flex-direction: column;
     gap: 5px;
@@ -37,12 +38,16 @@
     min-width: calc(50% - 2.5px);
 }
 
+button {
+    color: white;
+}
+
 .row {
     display: flex;
     gap: 5px;
 }
 
-.button {
+.btn {
     box-sizing: border-box;
     padding: 8px;
     border-radius: 5px;
@@ -57,10 +62,14 @@
     background-color: rgba(197, 194, 194, 0.76);
 }
 
-.equal {
+#equal {
     background-color: rgba(5, 105, 5, 0.829);
 }
 
-.backspace {
+#backspace {
     background-color: rgba(190, 12, 12, 0.842);
+}
+
+.btn:hover {
+    opacity: 80%;
 }
