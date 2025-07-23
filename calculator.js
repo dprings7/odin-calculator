@@ -16,18 +16,18 @@ const operations = {
     "squared": (a) => a * a,
     "backspace": backspace,
     "clear": clear,
-    "equal": equal,
 };
 
-
 const calculator = {
-    currentCalculation : [],
-    currentNumber : 0,
-    repeatCalculation : [],
     zeroDivision : false,
-    'display' : document.querySelector('.display'),
-    'currentOperator' : null,
-    'lastPressed' : null, // Use to track if a number or operation was pressed
+    newEntry : true,
+    firstNumber : null,
+    secondNumber : null,
+    currentOperator : null,
+    lastClick : null,
+    repeatCalculation : [],
+    actions : [],
+    display : document.querySelector('.display'),
 }
 
 function operate(operator, first, second) {
@@ -38,47 +38,49 @@ function operate(operator, first, second) {
         return;
     } 
     updateDisplay(result);
-    return result;
-}
-
-function equal(arr) {
-    calculator.currentNumber = operate(arr[1], arr[0], arr[2]);
-    // Store the last calculation details with the current number as the first operand so we can use in case user presses equals multiple times
-    if (calculator.currentCalculation.length !== 0) calculator.repeatCalculation = calculator.currentCalculation.slice();
-    calculator.repeatCalculation[0] = calculator.currentNumber;
-    calculator.currentCalculation = [];
+    calculator.firstNumber = result;
+    calculator.secondNumber = null;
+    calculator.repeatCalculation[0] = operator;
+    calculator.repeatCalculation[1] = result;
+    calculator.repeatCalculation[2] = second;
 }
 
 function backspace() {
-    let str = calculator.display.textContent;
+    let str = getDisplayText();
     if (str.length === 1) str = 0;
     else str = str.substring(0, str.length - 1);
-    calculator.display.textContent = str;
-    calculator.currentNumber = +str;
+    setDisplayText(str);
 }
 
 function clear() {
-    calculator.display.textContent = 0;
-    calculator.currentCalculation = [];
+    setDisplayText(0);
+    calculator.firstNumber = null;
+    calculator.secondNumber = null;
+    calculator.currentOperator = null;
+    calculator.lastClick = null;
+    calculator.newEntry = true;
     calculator.repeatCalculation = [];
-    calculator.currentNumber = 0;
+    calculator.actions = [];
+}
+
+function getDisplayText() {
+    return Number(calculator.display.textContent);
+}
+
+function setDisplayText(text) {
+    calculator.display.textContent = text;
 }
 
 function updateDisplay(value) {
     // When we have part of a number, allow this number to be built up into a multi-digit number
     // If the last pressed button was an operator, we skip and build a new value
-    if (calculator.display.textContent != 0 && !isNaN(calculator.lastPressed)) {
-        calculator.display.textContent += value;
+    if (getDisplayText() != 0 && calculator.newEntry === false) {
+        let str = getDisplayText();
+        setDisplayText(`${str}${value}`);
     }
     else {
-        calculator.display.textContent = Number(Number(value).toFixed(30));
+        setDisplayText(Number(Number(value).toFixed(30)));
     }
-    calculator.currentNumber = +calculator.display.textContent;
-}
-
-function addBtnListeners() {
-    setupNumberBtnListeners();
-    setupOperationBtnListeners();
 }
 
 function setupNumberBtnListeners() {
@@ -86,7 +88,8 @@ function setupNumberBtnListeners() {
     elementsArr.forEach(function(element) {
     element.addEventListener('click', (event) => {
         updateDisplay(element.textContent)
-        calculator.lastPressed = element.textContent;
+        calculator.newEntry = false;
+        calculator.lastClick = element.id;
         })
     })
 }
@@ -95,40 +98,79 @@ function setupOperationBtnListeners() {
     let elementsArr = document.querySelectorAll('.btn.operation');
     elementsArr.forEach(function(element) {
         element.addEventListener('click', (event) => {
-
-            calculator.lastPressed = element.id;
-
+            calculator.newEntry = true;
             switch (element.id) {
                 case 'clear':
                 case 'backspace':
                     operations[element.id]();
                     break;
                 case 'squared':
-                    calculator.display.textContent = operations[element.id](calculator.currentNumber);
-                    calculator.currentNumber = +calculator.display.textContent;
                     break;
                 case 'equal':
-                    if (calculator.currentOperator === 'equal') {
-                        equal(calculator.repeatCalculation);
+                    // Consecutive equals are pressed
+                    if (calculator.actions[calculator.actions.length - 1] === 'equal') {
+                        operate(calculator.repeatCalculation[0], calculator.repeatCalculation[1], calculator.repeatCalculation[2]);
+                        calculator.actions.push(element.id);
+                        calculator.lastClick = element.id;
                         break;
                     }
-                    calculator.currentCalculation.push(calculator.currentNumber);
-                    equal(calculator.currentCalculation);
-                    calculator.currentOperator = element.id;
+                    
+                    if (calculator.firstNumber === null) {
+                        getDisplayText();
+                        if (!calculator.currentOperator) {
+                            // Do nothing if no number or operator entered
+                            return;
+                        }
+                    } else {
+                        // If a single number and operator are pressed (e.g. 3 +) - use first as second
+                        calculator.secondNumber = getDisplayText();
+                        operate(calculator.currentOperator, calculator.firstNumber, calculator.secondNumber);
+                    }
+                    calculator.actions.push(element.id);
+                    calculator.lastClick = element.id;
                     break;
                 default:
-                    // Account for cases where multiple operations might be pressed in a row
-                    if (calculator.currentCalculation.length === 2) {
-                        calculator.currentCalculation[1] = element.id;
+                    calculator.currentOperator = element.id;
+                    // Chain operations
+                    if (calculator.firstNumber && 
+                        calculator.actions[calculator.actions.length - 1] !== 'equal' && 
+                        !isNaN(calculator.lastClick)
+                    ) {
+                        calculator.secondNumber = getDisplayText();
+                        operate(calculator.actions[calculator.actions.length - 1], calculator.firstNumber, calculator.secondNumber);
+                        console.log("Chain operations");
+                        calculator.actions.push(element.id);
+                        calculator.lastClick = element.id;
                         break;
                     }
-                    calculator.currentCalculation.push(calculator.currentNumber);
-                    calculator.currentOperator = element.id;
-                    calculator.currentCalculation.push(element.id);
+                    // Consecutive operations pressed
+                    if (
+                        calculator.secondNumber === null &&
+                        calculator.actions[calculator.actions.length - 1] !== 'equal' &&
+                        calculator.actions[calculator.actions.length - 1] !== undefined
+                    ) {
+                        calculator.actions[calculator.actions.length - 1] = element.id;
+                        console.log("Consecutive operations");
+                        calculator.actions.push(element.id);
+                        calculator.lastClick = element.id;
+                        break;
+                    }
+                    // Handles if an operator is pressed first
+                    if (calculator.firstNumber === null) {
+                        calculator.firstNumber = getDisplayText();
+                    }    
+                    calculator.actions.push(element.id);
+                    calculator.lastClick = element.id;
             }
         })
     })
 }
 
+function addBtnListeners() {
+    setupNumberBtnListeners();
+    setupOperationBtnListeners();
+}
 
 addBtnListeners();
+
+
