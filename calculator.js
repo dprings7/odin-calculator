@@ -63,7 +63,7 @@ function clear() {
 }
 
 function getDisplayText() {
-    return Number(calculator.display.textContent);
+    return calculator.display.textContent;
 }
 
 function setDisplayText(text) {
@@ -71,11 +71,11 @@ function setDisplayText(text) {
 }
 
 function updateDisplay(value) {
-    if (getDisplayText() != 0 && calculator.newEntry === false) {
+    if (calculator.newEntry === false) {
         setDisplayText(`${getDisplayText()}${value}`);
     }
     else {
-        setDisplayText(Number(Number(value).toFixed(30)));
+        setDisplayText(Number(Number(value).toFixed(15)));
     }
 }
 
@@ -87,6 +87,21 @@ function setupNumberBtnListeners() {
         calculator.newEntry = false;
         calculator.lastClick = element.id;
         })
+    })
+}
+
+function setupDecimalListener() {
+    let element = document.querySelector('.btn.decimal');
+    element.addEventListener('click', (event) => {
+        let temp = Array.from(getDisplayText());
+        if (temp.includes('.')) {
+            return;
+        }
+        if (getDisplayText() === '0') {
+            updateDisplay(`.`)
+            return;
+        }
+        updateDisplay(element.textContent);
     })
 }
 
@@ -137,7 +152,6 @@ function setupOperationBtnListeners() {
                     ) {
                         calculator.secondNumber = getDisplayText();
                         operate(calculator.actions[calculator.actions.length - 1], calculator.firstNumber, calculator.secondNumber);
-                        console.log("Chain operations");
                         calculator.actions.push(element.id);
                         calculator.lastClick = element.id;
                         break;
@@ -149,7 +163,6 @@ function setupOperationBtnListeners() {
                         calculator.actions[calculator.actions.length - 1] !== undefined
                     ) {
                         calculator.actions[calculator.actions.length - 1] = element.id;
-                        console.log("Consecutive operations");
                         calculator.actions.push(element.id);
                         calculator.lastClick = element.id;
                         break;
@@ -167,6 +180,7 @@ function setupOperationBtnListeners() {
 
 function addBtnListeners() {
     setupNumberBtnListeners();
+    setupDecimalListener();
     setupOperationBtnListeners();
 }
 
