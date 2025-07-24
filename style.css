@@ -3,11 +3,21 @@
     margin: 0px;
 }
 
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: moccasin;
+}
+
 .calculator-container {
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
 
+    width: 100%;
+    min-width: 200px;
     max-width: 600px;
     height: 550px;
     padding: 5px;
