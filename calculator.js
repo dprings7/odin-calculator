@@ -13,7 +13,6 @@ const operations = {
             return a / b;
         }
     },
-    "squared": (a) => a * a,
     "backspace": backspace,
     "clear": clear,
 };
@@ -46,7 +45,7 @@ function operate(operator, first, second) {
 }
 
 function backspace() {
-    let str = getDisplayText();
+    let str = String(getDisplayText());
     if (str.length === 1) str = 0;
     else str = str.substring(0, str.length - 1);
     setDisplayText(str);
@@ -105,6 +104,9 @@ function setupOperationBtnListeners() {
                     operations[element.id]();
                     break;
                 case 'squared':
+                    calculator.firstNumber = getDisplayText();
+                    operate('multiply', calculator.firstNumber, calculator.firstNumber);
+                    calculator.lastClick = element.id;
                     break;
                 case 'equal':
                     // Consecutive equals are pressed
@@ -172,5 +174,3 @@ function addBtnListeners() {
 }
 
 addBtnListeners();
-
-
