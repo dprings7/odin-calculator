@@ -71,11 +71,8 @@ function setDisplayText(text) {
 }
 
 function updateDisplay(value) {
-    // When we have part of a number, allow this number to be built up into a multi-digit number
-    // If the last pressed button was an operator, we skip and build a new value
     if (getDisplayText() != 0 && calculator.newEntry === false) {
-        let str = getDisplayText();
-        setDisplayText(`${str}${value}`);
+        setDisplayText(`${getDisplayText()}${value}`);
     }
     else {
         setDisplayText(Number(Number(value).toFixed(30)));
